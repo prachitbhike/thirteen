@@ -15,7 +15,7 @@ A comprehensive dashboard for tracking hedge fund activity through 13F filings.
 ### Prerequisites
 
 - Node.js 18+ and npm 9+
-- Docker and Docker Compose
+- A Supabase project with database credentials (service role key recommended)
 - Git
 
 ### Setup
@@ -27,29 +27,26 @@ A comprehensive dashboard for tracking hedge fund activity through 13F filings.
    npm install
    ```
 
-2. **Set up environment:**
+2. **Configure environment variables:**
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
+   # Fill in DATABASE_URL, SUPABASE_* keys, and service secrets
    ```
 
-3. **Start database:**
+3. **Provision the database (Supabase):**
    ```bash
-   ./scripts/setup-database.sh
+   npm run db:setup   # runs migrations then seeds sample data
    ```
 
-4. **Run development servers:**
+4. **Start development servers:**
    ```bash
-   # Terminal 1: Start database
-   docker-compose up postgres
-
-   # Terminal 2: Start backend API
+   # Backend API
    npm run dev --workspace=@hedge-fund-tracker/api
 
-   # Terminal 3: Start frontend
+   # Frontend
    npm run dev --workspace=@hedge-fund-tracker/web
 
-   # Terminal 4: Start ingestion service (optional)
+   # Ingestion service (optional)
    npm run dev --workspace=@hedge-fund-tracker/ingestion
    ```
 
@@ -65,8 +62,6 @@ hedge-fund-tracker/
 │   ├── database/         # Database schema and migrations
 │   ├── shared/           # Shared types and utilities
 │   └── ui/               # Shared UI components
-├── scripts/              # Setup and utility scripts
-└── docs/                 # Documentation
 ```
 
 ## 🗄️ Database
@@ -120,6 +115,23 @@ npm run dev --workspace=@hedge-fund-tracker/ingestion
 npm run migrate --workspace=@hedge-fund-tracker/database
 ```
 
+### Testing status and next steps
+
+- Automated tests are not yet configured; `npm run test` currently skips every workspace because no package exposes a `test` script.
+- Recommended coverage roadmap:
+  - **Shared utilities** (`packages/shared/src/utils.ts`): add Vitest unit suites for formatting helpers such as `formatCurrency`, `formatLargeNumber`, `calculatePercentageChange`, and `getQuarterEndDate`.
+  - **API routes** (`apps/api/src/routes/*`): add Supertest-powered integration tests that seed a disposable Postgres database and verify response payloads, pagination, and error handling.
+  - **Web components/pages** (`apps/web/src`): use React Testing Library with mocked API calls to assert dashboard metrics rendering, table sorting/filtering, and empty-state messaging.
+  - **Ingestion service** (`apps/ingestion/src/services/data-ingestion-service.ts`): create scenario tests that stub SEC ingestion inputs and confirm holdings/filings persistence plus idempotent retries.
+- Tooling required: add `vitest` (root config), `@testing-library/react` for the web workspace, and `supertest` for the API workspace, then expose a `test` npm script in each package.
+
+### Supabase configuration
+
+1. **Create a Supabase project** and retrieve the Node.js connection string plus the service role key.
+2. **Populate `.env`** using the placeholders in `.env.example` (`DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, etc.).
+3. **Run `npm run db:setup`** to execute migrations and seed sample portfolio data.
+4. **Verify connectivity** by hitting `http://localhost:3001/health`; failures usually point to an incorrect connection string or missing SSL flags.
+
 ## 🌐 API Endpoints
 
 The backend API provides the following key endpoints:
@@ -156,7 +168,8 @@ The backend API provides the following key endpoints:
 Key environment variables (see `.env.example`):
 
 ```bash
-DATABASE_URL=postgresql://localhost:5432/hedge_fund_tracker
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_ID.supabase.co:5432/postgres
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 OPENAI_API_KEY=your-openai-key
 SEC_USER_AGENT=YourCompany your@email.com
 ```
@@ -166,16 +179,17 @@ SEC_USER_AGENT=YourCompany your@email.com
 ### Database Issues
 
 ```bash
-# Reset database
-docker-compose down -v
-./scripts/setup-database.sh
+# Reset database by re-running migrations
+npm run db:migrate
+
+# Re-seed sample data
+npm run db:seed
 ```
 
 ### Port Conflicts
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
-- PostgreSQL: localhost:5432
 
 ### Common Issues
 

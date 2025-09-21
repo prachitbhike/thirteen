@@ -12,11 +12,12 @@
     "dev": "npm run dev --workspaces",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces",
+    "test": "npm run test --workspaces --if-present",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
-    "db:setup": "./scripts/setup-database.sh",
+    "db:setup": "npm run db:migrate && npm run db:seed",
     "db:migrate": "npm run migrate --workspace=@hedge-fund-tracker/database",
-    "db:seed": "npm run seed --workspace=@hedge-fund-tracker/database"
+    "db:seed": "npm run seed --workspace=@hedge-fund-tracker/database",
+    "db:studio": "npm run studio --workspace=@hedge-fund-tracker/database"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

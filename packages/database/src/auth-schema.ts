@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, timestamp, boolean, jsonb, index, unique } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, timestamp, boolean, jsonb, index, unique, integer } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // User management tables
@@ -21,7 +21,7 @@ export const users = pgTable('users', {
 // User sessions for authentication
 export const sessions = pgTable('sessions', {
   id: serial('id').primaryKey(),
-  userId: serial('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   sessionToken: varchar('session_token', { length: 255 }).unique().notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow()
@@ -33,7 +33,7 @@ export const sessions = pgTable('sessions', {
 // User preferences and settings
 export const userPreferences = pgTable('user_preferences', {
   id: serial('id').primaryKey(),
-  userId: serial('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   dashboardLayout: jsonb('dashboard_layout'),
   notifications: jsonb('notifications'),
   theme: varchar('theme', { length: 20 }).default('light'),
@@ -48,7 +48,7 @@ export const userPreferences = pgTable('user_preferences', {
 // User's tracked/watchlist funds
 export const userWatchlists = pgTable('user_watchlists', {
   id: serial('id').primaryKey(),
-  userId: serial('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   description: text('description'),
   isDefault: boolean('is_default').default(false),
@@ -63,8 +63,8 @@ export const userWatchlists = pgTable('user_watchlists', {
 // Funds in user watchlists
 export const watchlistFunds = pgTable('watchlist_funds', {
   id: serial('id').primaryKey(),
-  watchlistId: serial('watchlist_id').references(() => userWatchlists.id, { onDelete: 'cascade' }).notNull(),
-  fundManagerId: serial('fund_manager_id').notNull(), // References fundManagers.id
+  watchlistId: integer('watchlist_id').references(() => userWatchlists.id, { onDelete: 'cascade' }).notNull(),
+  fundManagerId: integer('fund_manager_id').notNull(), // References fundManagers.id
   addedAt: timestamp('added_at').defaultNow(),
   notes: text('notes')
 }, (table) => ({
@@ -75,10 +75,10 @@ export const watchlistFunds = pgTable('watchlist_funds', {
 // User alerts and notifications
 export const userAlerts = pgTable('user_alerts', {
   id: serial('id').primaryKey(),
-  userId: serial('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   alertType: varchar('alert_type', { length: 50 }).notNull(), // 'position_change', 'new_filing', 'threshold_breach'
   entityType: varchar('entity_type', { length: 20 }).notNull(), // 'fund', 'security'
-  entityId: serial('entity_id').notNull(), // fundManagerId or securityId
+  entityId: integer('entity_id').notNull(), // fundManagerId or securityId
   conditions: jsonb('conditions').notNull(), // Alert criteria
   isActive: boolean('is_active').default(true),
   lastTriggered: timestamp('last_triggered'),
@@ -92,8 +92,8 @@ export const userAlerts = pgTable('user_alerts', {
 // Alert notifications sent to users
 export const alertNotifications = pgTable('alert_notifications', {
   id: serial('id').primaryKey(),
-  alertId: serial('alert_id').references(() => userAlerts.id, { onDelete: 'cascade' }).notNull(),
-  userId: serial('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  alertId: integer('alert_id').references(() => userAlerts.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   message: text('message').notNull(),
   data: jsonb('data'), // Additional context data
@@ -109,10 +109,10 @@ export const alertNotifications = pgTable('alert_notifications', {
 // User activity log
 export const userActivity = pgTable('user_activity', {
   id: serial('id').primaryKey(),
-  userId: serial('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   action: varchar('action', { length: 100 }).notNull(),
   entityType: varchar('entity_type', { length: 50 }),
-  entityId: serial('entity_id'),
+  entityId: integer('entity_id'),
   metadata: jsonb('metadata'),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: text('user_agent'),

@@ -15,9 +15,6 @@ import { SecurityDetail } from '@/pages/SecurityDetail';
 import { Analysis } from '@/pages/Analysis';
 import { Search } from '@/pages/Search';
 
-// Theme and styles
-import '@/styles/globals.css';
-
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {

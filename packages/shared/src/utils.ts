@@ -50,7 +50,7 @@ export function getQuarterFromDate(date: Date): { year: number; quarter: number 
 
 export function getQuarterEndDate(year: number, quarter: number): Date {
   const month = quarter * 3; // Q1=3, Q2=6, Q3=9, Q4=12
-  return new Date(year, month - 1, 0); // Last day of the quarter
+  return new Date(year, month, 0); // First day of next quarter minus 1 day
 }
 
 // Percentage utilities

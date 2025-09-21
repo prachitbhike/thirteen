@@ -1,5 +1,6 @@
 import { pgTable, serial, varchar, text, timestamp, integer, bigint, decimal, date, jsonb, index, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { users } from './auth-schema.js';
 
 // Hedge Funds / Investment Managers
 export const fundManagers = pgTable('fund_managers', {
@@ -75,14 +76,6 @@ export const positionChanges = pgTable('position_changes', {
 }, (table) => ({
   fundPeriodIdx: index('idx_position_changes_fund').on(table.fundManagerId, table.toPeriod),
 }));
-
-// Application Users
-export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  email: varchar('email', { length: 255 }).unique().notNull(),
-  username: varchar('username', { length: 50 }).unique(),
-  createdAt: timestamp('created_at').defaultNow()
-});
 
 // User's Tracked Funds
 export const userTrackedFunds = pgTable('user_tracked_funds', {
@@ -174,3 +167,5 @@ export const analysisCacheRelations = relations(analysisCache, ({ one }) => ({
     references: [fundManagers.id]
   })
 }));
+
+export { users } from './auth-schema.js';

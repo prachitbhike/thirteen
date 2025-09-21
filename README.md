@@ -80,8 +80,9 @@ Hedge Fund Tracker is an enterprise-grade application that monitors institutiona
 
 ### Prerequisites
 - Node.js 18+
-- Docker and Docker Compose
-- PostgreSQL 15+
+- npm 9+ (workspace support)
+- Supabase project (connection string + keys)
+- Git
 
 ### Installation
 
@@ -96,38 +97,32 @@ Hedge Fund Tracker is an enterprise-grade application that monitors institutiona
    npm install
    ```
 
+   > ℹ️ npm 9+ is required for workspace protocol support. Upgrade with `npm install -g npm@9` if you encounter `EUNSUPPORTEDPROTOCOL`.
+
 3. **Configure environment**
    ```bash
    cp .env.example .env
    # Edit .env with your API keys and database settings
    ```
 
-4. **Start the database**
+4. **Provision the database (Supabase)**
    ```bash
-   ./scripts/setup-database.sh
+   npm run db:setup
    ```
 
-5. **Run database migrations**
+5. **Start the application**
    ```bash
-   npm run db:migrate
-   ```
-
-6. **Start the application**
-   ```bash
-   # Terminal 1: Start database
-   docker-compose up postgres
-
-   # Terminal 2: Start backend API
+   # Terminal 1: Backend API
    npm run dev --workspace=@hedge-fund-tracker/api
 
-   # Terminal 3: Start frontend
+   # Terminal 2: Frontend
    npm run dev --workspace=@hedge-fund-tracker/web
 
-   # Terminal 4 (optional): Start data ingestion
+   # Terminal 3 (optional): Ingestion service
    npm run dev --workspace=@hedge-fund-tracker/ingestion
    ```
 
-7. **Access the application**
+6. **Access the application**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:3001
    - API Documentation: http://localhost:3001/health
@@ -144,8 +139,6 @@ hedge-fund-tracker/
 │   ├── database/         # Database schema and migrations
 │   ├── shared/           # Shared types and utilities
 │   └── ui/               # Reusable UI components
-├── scripts/              # Setup and utility scripts
-├── docs/                 # Documentation
 └── README.md
 ```
 
@@ -171,8 +164,11 @@ npm run ingest:fund -- <CIK>   # Ingest specific fund
 
 ### Environment Variables
 ```bash
-# Database
-DATABASE_URL=postgresql://localhost:5432/hedge_fund_tracker
+# Database (Supabase)
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_ID.supabase.co:5432/postgres
+DATABASE_SSL=true
+DATABASE_SSL_REJECT_UNAUTHORIZED=true
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # API Keys
 OPENAI_API_KEY=your-openai-key
@@ -229,10 +225,10 @@ NODE_ENV=development
 
 ## 🚀 Deployment
 
-### **Docker Deployment**
-```bash
-docker-compose up -d
-```
+### **Supabase-backed deployment checklist**
+- Configure Supabase connection secrets (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) in your hosting platform.
+- Run `npm run db:migrate` during deploys to apply schema changes.
+- Restrict Supabase access to trusted networks or enable row-level security as needed.
 
 ### **Production Considerations**
 - Configure SSL/TLS certificates
@@ -263,7 +259,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- Check the [documentation](docs/) for detailed guides
+- Review the [development guide](DEVELOPMENT.md) for setup details
 - Report issues on GitHub Issues
 - For questions, create a discussion thread
 
