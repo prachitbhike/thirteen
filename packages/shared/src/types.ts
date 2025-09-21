@@ -1,150 +1,184 @@
-import { z } from 'zod';
+// API Response Types
+export interface ApiResponse<T = any> {
+  data: T;
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
 
 // Fund Manager Types
-export const FundManagerSchema = z.object({
-  id: z.number(),
-  cik: z.string(),
-  name: z.string(),
-  address: z.string().nullable(),
-  phone: z.string().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date()
-});
+export interface FundManager {
+  id: number;
+  cik: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export type FundManager = z.infer<typeof FundManagerSchema>;
+export interface FundManagerWithStats extends FundManager {
+  totalValue?: string;
+  totalPositions?: number;
+  lastFilingDate?: string;
+  quarterlyReturn?: number;
+}
 
 // Security Types
-export const SecuritySchema = z.object({
-  id: z.number(),
-  cusip: z.string(),
-  ticker: z.string().nullable(),
-  companyName: z.string(),
-  securityType: z.string().nullable(),
-  sector: z.string().nullable(),
-  industry: z.string().nullable(),
-  createdAt: z.date()
-});
+export interface Security {
+  id: number;
+  cusip: string;
+  ticker?: string;
+  companyName: string;
+  securityType?: string;
+  sector?: string;
+  industry?: string;
+  createdAt: string;
+}
 
-export type Security = z.infer<typeof SecuritySchema>;
+// Filing Types
+export interface Filing {
+  id: number;
+  fundManagerId: number;
+  filingDate: string;
+  periodEndDate: string;
+  formType: string;
+  totalValue?: string;
+  totalPositions?: number;
+  filingUrl?: string;
+  processedAt?: string;
+  createdAt: string;
+}
 
 // Holdings Types
-export const HoldingSchema = z.object({
-  id: z.number(),
-  filingId: z.number(),
-  securityId: z.number(),
-  fundManagerId: z.number(),
-  periodEndDate: z.date(),
-  sharesHeld: z.bigint(),
-  marketValue: z.bigint(),
-  percentOfPortfolio: z.number().nullable(),
-  investmentDiscretion: z.string().nullable(),
-  votingAuthority: z.string().nullable(),
-  createdAt: z.date()
-});
+export interface Holding {
+  id: number;
+  filingId: number;
+  securityId: number;
+  fundManagerId: number;
+  periodEndDate: string;
+  sharesHeld: string;
+  marketValue: string;
+  percentOfPortfolio?: string;
+  investmentDiscretion?: string;
+  votingAuthority?: string;
+  createdAt: string;
+}
 
-export type Holding = z.infer<typeof HoldingSchema>;
+export interface HoldingWithDetails extends Holding {
+  security: Security;
+  fundManager: FundManager;
+}
 
 // Position Change Types
-export const PositionChangeSchema = z.object({
-  id: z.number(),
-  fundManagerId: z.number(),
-  securityId: z.number(),
-  fromPeriod: z.date(),
-  toPeriod: z.date(),
-  sharesChange: z.bigint().nullable(),
-  valueChange: z.bigint().nullable(),
-  percentChange: z.number().nullable(),
-  changeType: z.enum(['NEW', 'SOLD', 'INCREASED', 'DECREASED']).nullable(),
-  createdAt: z.date()
-});
+export interface PositionChange {
+  id: number;
+  fundManagerId: number;
+  securityId: number;
+  fromPeriod: string;
+  toPeriod: string;
+  sharesChange?: string;
+  valueChange?: string;
+  percentChange?: string;
+  changeType?: 'NEW' | 'SOLD' | 'INCREASED' | 'DECREASED';
+  createdAt: string;
+}
 
-export type PositionChange = z.infer<typeof PositionChangeSchema>;
+export interface PositionChangeWithDetails extends PositionChange {
+  security: Security;
+  fundManager: FundManager;
+}
 
-// API Response Types
-export const PaginationSchema = z.object({
-  page: z.number(),
-  limit: z.number(),
-  total: z.number(),
-  totalPages: z.number()
-});
+// Search Types
+export interface SearchFilters {
+  query?: string;
+  sector?: string;
+  minValue?: number;
+  maxValue?: number;
+  period?: string;
+  changeType?: string;
+}
 
-export type Pagination = z.infer<typeof PaginationSchema>;
-
-export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) => z.object({
-  success: z.boolean(),
-  data: dataSchema,
-  pagination: PaginationSchema.optional(),
-  message: z.string().optional()
-});
+export interface SearchResult {
+  type: 'fund' | 'security' | 'holding';
+  id: number;
+  title: string;
+  subtitle?: string;
+  metadata?: Record<string, any>;
+}
 
 // Dashboard Types
-export const DashboardStatsSchema = z.object({
-  totalFunds: z.number(),
-  totalHoldings: z.number(),
-  totalValue: z.bigint(),
-  lastUpdated: z.date()
-});
+export interface DashboardStats {
+  totalFunds: number;
+  totalSecurities: number;
+  totalValue: string;
+  lastUpdated: string;
+}
 
-export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
+export interface TopFund {
+  id: number;
+  name: string;
+  totalValue: string;
+  quarterlyChange: number;
+  topHolding?: string;
+}
 
-export const TopHoldingSchema = z.object({
-  security: SecuritySchema,
-  fundManager: FundManagerSchema,
-  marketValue: z.bigint(),
-  sharesHeld: z.bigint(),
-  percentOfPortfolio: z.number().nullable(),
-  periodEndDate: z.date()
-});
+export interface TopHolding {
+  security: Security;
+  totalValue: string;
+  holderCount: number;
+  quarterlyChange: number;
+}
 
-export type TopHolding = z.infer<typeof TopHoldingSchema>;
+export interface SectorAllocation {
+  sector: string;
+  value: string;
+  percentage: number;
+  change: number;
+}
 
-// 13F Filing Types
-export const FilingSchema = z.object({
-  id: z.number(),
-  fundManagerId: z.number(),
-  filingDate: z.date(),
-  periodEndDate: z.date(),
-  formType: z.string(),
-  totalValue: z.bigint().nullable(),
-  totalPositions: z.number().nullable(),
-  filingUrl: z.string().nullable(),
-  processedAt: z.date().nullable(),
-  createdAt: z.date()
-});
+// User Types
+export interface User {
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export type Filing = z.infer<typeof FilingSchema>;
-
-// Search and Filter Types
-export const HoldingFiltersSchema = z.object({
-  fundManagerIds: z.array(z.number()).optional(),
-  securityIds: z.array(z.number()).optional(),
-  sectors: z.array(z.string()).optional(),
-  periodStartDate: z.date().optional(),
-  periodEndDate: z.date().optional(),
-  minValue: z.bigint().optional(),
-  maxValue: z.bigint().optional(),
-  changeType: z.enum(['NEW', 'SOLD', 'INCREASED', 'DECREASED']).optional()
-});
-
-export type HoldingFilters = z.infer<typeof HoldingFiltersSchema>;
+export interface UserTrackedFund {
+  id: number;
+  userId: number;
+  fundManagerId: number;
+  fundManager: FundManager;
+  createdAt: string;
+}
 
 // Analysis Types
-export const AnalysisTypeSchema = z.enum([
-  'portfolio_summary',
-  'position_changes',
-  'sector_allocation',
-  'concentration_risk',
-  'performance_metrics'
-]);
+export interface AnalysisRequest {
+  fundManagerId: number;
+  analysisType: 'portfolio' | 'risk' | 'performance' | 'holdings';
+  periodEndDate?: string;
+}
 
-export type AnalysisType = z.infer<typeof AnalysisTypeSchema>;
-
-export const AnalysisResultSchema = z.object({
-  type: AnalysisTypeSchema,
-  summary: z.string(),
-  insights: z.array(z.string()),
-  data: z.record(z.unknown()),
-  generatedAt: z.date()
-});
-
-export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
+export interface AnalysisResult {
+  id: number;
+  fundManagerId: number;
+  periodEndDate?: string;
+  analysisType: string;
+  analysisResult: any;
+  createdAt: string;
+  expiresAt?: string;
+}

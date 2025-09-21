@@ -9,10 +9,6 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { Funds } from '@/pages/Funds';
 import { FundDetail } from '@/pages/FundDetail';
-import { Holdings } from '@/pages/Holdings';
-import { Securities } from '@/pages/Securities';
-import { SecurityDetail } from '@/pages/SecurityDetail';
-import { Analysis } from '@/pages/Analysis';
 import { Search } from '@/pages/Search';
 
 // Create a client
@@ -40,16 +36,6 @@ function App() {
               {/* Funds */}
               <Route path="funds" element={<Funds />} />
               <Route path="funds/:id" element={<FundDetail />} />
-
-              {/* Holdings */}
-              <Route path="holdings" element={<Holdings />} />
-
-              {/* Securities */}
-              <Route path="securities" element={<Securities />} />
-              <Route path="securities/:id" element={<SecurityDetail />} />
-
-              {/* Analysis */}
-              <Route path="analysis" element={<Analysis />} />
 
               {/* Search */}
               <Route path="search" element={<Search />} />

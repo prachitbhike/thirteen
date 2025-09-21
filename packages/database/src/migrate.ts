@@ -1,43 +1,40 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { createConnection } from './index.js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import postgres from 'postgres';
 
-function loadEnvFiles() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const candidates = [
-    path.resolve(__dirname, '../../../.env'),
-    path.resolve(process.cwd(), '../..', '.env'),
-    path.resolve(process.cwd(), '.env')
-  ];
+const connectionString = process.env.DATABASE_URL;
 
-  for (const candidate of candidates) {
-    dotenv.config({ path: candidate, override: false });
-  }
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is required');
 }
 
-async function main() {
-  loadEnvFiles();
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const migrationsFolder = path.resolve(__dirname, '../migrations');
-
-  const { client, db } = createConnection();
-
-  try {
-    await client.connect();
-    console.info(`Running migrations from ${migrationsFolder}`);
-    await migrate(db, { migrationsFolder });
-    console.info('Database migrations executed successfully');
-  } finally {
-    await client.end();
-  }
-}
-
-main().catch((error) => {
-  console.error('Migration failed:', error);
-  process.exit(1);
+const sql = postgres(connectionString, {
+  ssl: process.env.DATABASE_SSL === 'true' ? {
+    rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false'
+  } : false,
 });
+
+async function migrate() {
+  try {
+    console.log('🔄 Running database migrations...');
+
+    // Read and execute the initial schema
+    const schemaSQL = readFileSync(join(__dirname, '../migrations/001_initial_schema.sql'), 'utf8');
+    await sql.unsafe(schemaSQL);
+    console.log('✅ Schema migration completed');
+
+    // Read and execute the seed data
+    const seedSQL = readFileSync(join(__dirname, '../migrations/002_seed_data.sql'), 'utf8');
+    await sql.unsafe(seedSQL);
+    console.log('✅ Seed data migration completed');
+
+    console.log('🎉 All migrations completed successfully!');
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    process.exit(1);
+  } finally {
+    await sql.end();
+  }
+}
+
+migrate();

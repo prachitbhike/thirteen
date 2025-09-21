@@ -1,6 +1,6 @@
 import { pgTable, serial, varchar, text, timestamp, integer, bigint, decimal, date, jsonb, index, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './auth-schema.js';
+import { users } from './auth-schema';
 
 // Hedge Funds / Investment Managers
 export const fundManagers = pgTable('fund_managers', {
@@ -168,4 +168,4 @@ export const analysisCacheRelations = relations(analysisCache, ({ one }) => ({
   })
 }));
 
-export { users } from './auth-schema.js';
+export { users } from './auth-schema';

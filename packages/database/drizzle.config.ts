@@ -1,18 +1,12 @@
-import { defineConfig } from 'drizzle-kit';
+import type { Config } from 'drizzle-kit';
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL is required. Set your Supabase connection string in the environment.');
-}
-
-export default defineConfig({
+export default {
   schema: './src/schema.ts',
   out: './migrations',
-  dialect: 'postgresql',
+  driver: 'pg',
   dbCredentials: {
-    url: databaseUrl
+    connectionString: process.env.DATABASE_URL!,
   },
   verbose: true,
-  strict: true
-});
+  strict: true,
+} satisfies Config;

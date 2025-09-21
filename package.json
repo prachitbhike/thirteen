@@ -1,31 +1,28 @@
 {
   "name": "hedge-fund-tracker",
-  "version": "0.1.0",
   "private": true,
+  "version": "1.0.0",
+  "description": "A comprehensive platform for tracking and analyzing hedge fund activity through 13F filings",
+  "author": "Prachit Bhike",
+  "license": "MIT",
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "dev": "npm run dev --workspaces",
-    "lint": "npm run lint --workspaces",
-    "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces --if-present",
-    "clean": "npm run clean --workspaces && rm -rf node_modules",
-    "db:setup": "npm run db:migrate && npm run db:seed",
-    "db:migrate": "npm run migrate --workspace=@hedge-fund-tracker/database",
-    "db:seed": "npm run seed --workspace=@hedge-fund-tracker/database",
-    "db:studio": "npm run studio --workspace=@hedge-fund-tracker/database"
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build",
+    "preview": "cd apps/web && npm run preview",
+    "lint": "cd apps/web && npm run lint",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "cd packages/database && npx drizzle-kit generate:pg",
+    "db:migrate": "cd packages/database && tsx src/migrate.ts",
+    "db:seed": "cd packages/database && tsx src/seed.ts",
+    "db:studio": "cd packages/database && npx drizzle-kit studio"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "tsx": "^4.0.0"
+    "typescript": "^5.2.2",
+    "@types/node": "^20.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "npm": ">=8.0.0"
   }
 }

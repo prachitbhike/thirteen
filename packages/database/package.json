@@ -1,28 +1,27 @@
 {
-  "name": "@hedge-fund-tracker/database",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
+  "name": "hedge-fund-tracker-database",
+  "version": "1.0.0",
+  "description": "Database schema and migrations for hedge fund tracker",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "generate": "drizzle-kit generate",
+    "build": "tsc",
+    "dev": "tsc --watch",
     "migrate": "tsx src/migrate.ts",
     "seed": "tsx src/seed.ts",
-    "studio": "drizzle-kit studio",
-    "lint": "eslint . --ext .ts --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate:pg",
+    "studio": "drizzle-kit studio"
   },
   "dependencies": {
     "drizzle-orm": "^0.29.0",
-    "pg": "^8.11.0",
-    "dotenv": "^16.3.0",
-    "@hedge-fund-tracker/shared": "workspace:*"
+    "drizzle-kit": "^0.20.0",
+    "postgres": "^3.4.3",
+    "@supabase/supabase-js": "^2.38.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/pg": "^8.10.0",
-    "drizzle-kit": "^0.20.0",
-    "eslint": "^8.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
   }
 }

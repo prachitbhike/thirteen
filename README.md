@@ -26,24 +26,6 @@ Hedge Fund Tracker is an enterprise-grade application that monitors institutiona
 - Alert system for significant position movements
 - Holdings data with market value and percentage tracking
 
-### 🤖 **AI-Powered Analysis**
-- OpenAI/Anthropic integration for intelligent insights
-- Automated portfolio analysis and risk assessment
-- Market trend identification and opportunity detection
-- Professional-grade financial commentary and recommendations
-
-### 👤 **User Management**
-- Personal watchlists for tracking selected hedge funds
-- Customizable alerts and notification preferences
-- Public/private watchlist sharing capabilities
-- User activity tracking and preferences
-
-### 🔔 **Real-Time Notifications**
-- WebSocket-based live updates
-- Configurable alerts for position changes and new filings
-- In-app notification system with read/unread status
-- Email and push notification support (ready for integration)
-
 ### 🔍 **Advanced Search**
 - Global search across funds, securities, and holdings
 - Autocomplete suggestions and similar entity recommendations
@@ -58,30 +40,24 @@ Hedge Fund Tracker is an enterprise-grade application that monitors institutiona
 - Real-time data visualization using Recharts
 - React Query for efficient data fetching and caching
 
-### **Backend (Node.js + Hono)**
-- High-performance API server with TypeScript
-- PostgreSQL database with Drizzle ORM
-- JWT-based authentication with session management
-- WebSocket support for real-time updates
+### **Backend (Supabase)**
+- PostgreSQL database with optimized schema for 13F data
+- Real-time subscriptions and automatic API generation
+- Built-in authentication and authorization
+- Row-level security (RLS) for data protection
 
-### **Data Pipeline**
+### **Data Pipeline** (Future)
 - Automated SEC EDGAR API integration
 - 13F filing parser supporting XML, HTML, and text formats
 - Scheduled data ingestion with error handling and retry logic
 - Position change calculation and trend analysis
-
-### **AI Integration**
-- Multi-provider LLM service (OpenAI + Anthropic fallback)
-- Specialized financial analysis prompts and templates
-- Caching system for expensive AI operations
-- Professional-grade investment insights generation
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - npm 9+ (workspace support)
-- Supabase project (connection string + keys)
+- Supabase account and project
 - Git
 
 ### Installation
@@ -102,43 +78,43 @@ Hedge Fund Tracker is an enterprise-grade application that monitors institutiona
 3. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your API keys and database settings
+   # Edit .env with your Supabase credentials
    ```
 
-4. **Provision the database (Supabase)**
+4. **Set up Supabase**
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Copy your project URL and API keys to `.env`:
+     ```bash
+     DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_ID.supabase.co:5432/postgres
+     SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+     SUPABASE_ANON_KEY=your-anon-key
+     SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+     ```
+   - Run the database migrations:
+     ```bash
+     cd packages/database && npm install
+     npm run migrate
+     ```
+
+5. **Start the development server**
    ```bash
-   npm run db:setup
-   ```
-
-5. **Start the application**
-   ```bash
-   # Terminal 1: Backend API
-   npm run dev --workspace=@hedge-fund-tracker/api
-
-   # Terminal 2: Frontend
-   npm run dev --workspace=@hedge-fund-tracker/web
-
-   # Terminal 3 (optional): Ingestion service
-   npm run dev --workspace=@hedge-fund-tracker/ingestion
+   npm run dev
    ```
 
 6. **Access the application**
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3001
-   - API Documentation: http://localhost:3001/health
+   - Supabase Dashboard: https://app.supabase.com
 
 ## 📦 Project Structure
 
 ```
 hedge-fund-tracker/
 ├── apps/
-│   ├── web/              # React frontend dashboard
-│   ├── api/              # Hono backend API server
-│   └── ingestion/        # SEC data ingestion service
+│   └── web/              # React frontend dashboard
 ├── packages/
 │   ├── database/         # Database schema and migrations
-│   ├── shared/           # Shared types and utilities
-│   └── ui/               # Reusable UI components
+│   └── shared/           # Shared types and utilities
+├── .env.example          # Environment variables template
 └── README.md
 ```
 
@@ -147,40 +123,29 @@ hedge-fund-tracker/
 ### Key Commands
 ```bash
 # Development
-npm run dev                    # Start all services
+npm run dev                    # Start frontend development server
 npm run build                  # Build all packages
-npm run lint                   # Lint all code
 npm run typecheck              # Type check all packages
 
 # Database
-npm run db:migrate             # Run database migrations
-npm run db:seed                # Seed initial data
-npm run db:studio              # Open database studio
-
-# Data Ingestion
-npm run ingest:latest          # Ingest recent filings
-npm run ingest:fund -- <CIK>   # Ingest specific fund
+npm run db:migrate             # Run database migrations (when implemented)
+npm run db:seed                # Seed initial data (when implemented)
 ```
 
 ### Environment Variables
 ```bash
 # Database (Supabase)
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_ID.supabase.co:5432/postgres
-DATABASE_SSL=true
-DATABASE_SSL_REJECT_UNAUTHORIZED=true
+SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# API Keys
-OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
-SEC_USER_AGENT=YourCompany your@email.com
-
 # Application
-JWT_SECRET=your-jwt-secret
 NODE_ENV=development
+WEB_PORT=5173
 ```
 
-## 📊 Data Sources
+## 📊 Data Sources (Planned)
 
 ### **SEC EDGAR API**
 - Official SEC filing database
@@ -194,56 +159,51 @@ NODE_ENV=development
 - Plain text submissions
 - CSV export capabilities
 
-## 🤖 AI Features
-
-### **Portfolio Analysis**
-- Investment strategy assessment
-- Risk concentration analysis
-- Sector allocation review
-- Performance metrics calculation
-
-### **Security Analysis**
-- Institutional ownership analysis
-- Holder quality assessment
-- Investment thesis validation
-- Liquidity impact evaluation
-
-### **Market Intelligence**
-- Sector rotation trends
-- Crowded trade identification
-- Flow analysis and positioning
-- Systemic risk assessment
-
 ## 🔐 Security
 
-- JWT-based authentication with refresh tokens
-- Session management with automatic expiration
-- Password hashing with bcrypt
-- Rate limiting on API endpoints
+- Supabase built-in authentication with JWT tokens
+- Row-level security (RLS) policies
+- Environment variable configuration
 - Input validation and sanitization
-- SQL injection prevention with parameterized queries
+- SQL injection prevention with Supabase's secure APIs
 
 ## 🚀 Deployment
 
-### **Supabase-backed deployment checklist**
-- Configure Supabase connection secrets (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) in your hosting platform.
-- Run `npm run db:migrate` during deploys to apply schema changes.
-- Restrict Supabase access to trusted networks or enable row-level security as needed.
-
 ### **Production Considerations**
-- Configure SSL/TLS certificates
-- Set up database backups
-- Configure log aggregation
+- Configure Supabase production environment
+- Set up custom domain and SSL certificates
+- Configure environment variables in hosting platform
+- Enable database backups
 - Set up monitoring and alerting
-- Configure CDN for static assets
 
-## 📈 Performance
+### **Recommended Hosting**
+- **Frontend**: Vercel, Netlify, or Cloudflare Pages
+- **Database**: Supabase (managed PostgreSQL)
+- **CDN**: Cloudflare for static assets
 
-- Optimized database queries with proper indexing
-- Redis caching for frequently accessed data
-- Efficient pagination for large datasets
-- WebSocket connections for real-time updates
-- Image optimization and lazy loading
+## 📈 Current Status
+
+### ✅ Completed
+- Frontend application with React + TypeScript
+- Dashboard with mock data visualization
+- Fund search and detail pages
+- Global search interface
+- Responsive design with Tailwind CSS
+- Database schema design
+- Development environment setup
+
+### 🚧 In Progress
+- Supabase integration and migrations
+- API layer for data fetching
+- Authentication system
+
+### 📋 Planned
+- SEC EDGAR API integration
+- Data ingestion pipeline
+- Real-time notifications
+- AI-powered analysis
+- Advanced filtering and analytics
+- Mobile application
 
 ## 🤝 Contributing
 
@@ -259,29 +219,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- Review the [development guide](DEVELOPMENT.md) for setup details
-- Report issues on GitHub Issues
+- Check the environment setup section above
+- Review Supabase documentation for database issues
+- Report bugs via GitHub Issues
 - For questions, create a discussion thread
-
-## 🎯 Use Cases
-
-### **Investment Research**
-- Track smart money movements
-- Identify investment themes and trends
-- Monitor position changes in real-time
-- Analyze fund concentration and risk
-
-### **Risk Management**
-- Monitor systemic risk from crowded trades
-- Track hedge fund exposure to specific securities
-- Identify potential liquidation risks
-- Assess market concentration levels
-
-### **Market Intelligence**
-- Understand institutional sentiment
-- Track sector rotation patterns
-- Identify emerging investment themes
-- Monitor regulatory compliance
 
 ---
 
