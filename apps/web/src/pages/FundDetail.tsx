@@ -1,71 +1,32 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, TrendingUp, TrendingDown, Plus, Minus } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/format';
+import { useQuery } from '@tanstack/react-query';
+import { getFundById, getFundHoldings, getFundFilingHistory } from '@/lib/api';
 
 export function FundDetail() {
   const { id } = useParams();
+  const fundId = Number(id);
 
-  // Mock data for demonstration
-  const fund = {
-    id: 1,
-    name: 'Berkshire Hathaway Inc',
-    cik: '0001067983',
-    address: '1440 Kiewit Plaza, Omaha, NE 68131',
-    phone: '(402) 346-1400',
-    totalValue: 500000000000,
-    totalPositions: 45,
-    lastFilingDate: '2024-08-14',
-    quarterlyChange: 2.3,
-    topHolding: 'Apple Inc.'
-  };
+  const { data: fund, isLoading: fundLoading, error: fundError } = useQuery({
+    queryKey: ['fund', fundId],
+    queryFn: () => getFundById(fundId),
+    enabled: Number.isFinite(fundId)
+  });
 
-  const holdings = [
-    {
-      id: 1,
-      security: { ticker: 'AAPL', companyName: 'Apple Inc.', sector: 'Technology' },
-      sharesHeld: 915560000,
-      marketValue: 174000000000,
-      percentOfPortfolio: 34.8,
-      changeType: 'DECREASED',
-      valueChange: -12000000000
-    },
-    {
-      id: 2,
-      security: { ticker: 'BAC', companyName: 'Bank of America Corp', sector: 'Financials' },
-      sharesHeld: 1032720000,
-      marketValue: 41000000000,
-      percentOfPortfolio: 8.2,
-      changeType: 'INCREASED',
-      valueChange: 2500000000
-    },
-    {
-      id: 3,
-      security: { ticker: 'CVX', companyName: 'Chevron Corporation', sector: 'Energy' },
-      sharesHeld: 123100000,
-      marketValue: 18500000000,
-      percentOfPortfolio: 3.7,
-      changeType: 'NEW',
-      valueChange: 18500000000
-    },
-    {
-      id: 4,
-      security: { ticker: 'KO', companyName: 'The Coca-Cola Company', sector: 'Consumer Staples' },
-      sharesHeld: 400000000,
-      marketValue: 25000000000,
-      percentOfPortfolio: 5.0,
-      changeType: 'INCREASED',
-      valueChange: 1200000000
-    }
-  ];
+  const { data: holdings, isLoading: holdingsLoading, error: holdingsError } = useQuery({
+    queryKey: ['fund-holdings', fundId],
+    queryFn: () => getFundHoldings(fundId, 100),
+    enabled: Number.isFinite(fundId)
+  });
 
-  const filingHistory = [
-    { date: '2024-08-14', period: 'Q2 2024', totalValue: 500000000000, positions: 45 },
-    { date: '2024-05-15', period: 'Q1 2024', totalValue: 490000000000, positions: 47 },
-    { date: '2024-02-14', period: 'Q4 2023', totalValue: 485000000000, positions: 46 },
-  ];
+  const { data: filingHistory, isLoading: historyLoading, error: historyError } = useQuery({
+    queryKey: ['fund-history', fundId],
+    queryFn: () => getFundFilingHistory(fundId, 10),
+    enabled: Number.isFinite(fundId)
+  });
 
   return (
     <div className="space-y-6">
@@ -77,8 +38,10 @@ export function FundDetail() {
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{fund.name}</h1>
-          <p className="text-muted-foreground">CIK: {fund.cik}</p>
+          <h1 className="text-3xl font-bold">{fundLoading ? 'Loading…' : fund?.name}</h1>
+          {!fundLoading && fund && (
+            <p className="text-muted-foreground">CIK: {fund.cik}</p>
+          )}
         </div>
         <Button variant="outline">
           <ExternalLink className="h-4 w-4 mr-2" />
@@ -93,16 +56,16 @@ export function FundDetail() {
             <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(fund.totalValue)}</div>
+            <div className="text-2xl font-bold">{fundLoading ? '—' : formatCurrency(((fund?.total_value || 0) as number) / 100)}</div>
             <div className={`flex items-center text-xs ${
-              fund.quarterlyChange >= 0 ? 'text-green-600' : 'text-red-600'
+              ((fund?.quarterly_change || 0) as number) >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
-              {fund.quarterlyChange >= 0 ? (
+              {(fund?.quarterly_change || 0) >= 0 ? (
                 <TrendingUp className="h-3 w-3 mr-1" />
               ) : (
                 <TrendingDown className="h-3 w-3 mr-1" />
               )}
-              {fund.quarterlyChange >= 0 ? '+' : ''}{fund.quarterlyChange}% from last quarter
+              {((fund?.quarterly_change || 0) as number) >= 0 ? '+' : ''}{(fund?.quarterly_change || 0).toFixed(1)}% from last quarter
             </div>
           </CardContent>
         </Card>
@@ -112,7 +75,7 @@ export function FundDetail() {
             <CardTitle className="text-sm font-medium">Total Positions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fund.totalPositions}</div>
+            <div className="text-2xl font-bold">{fundLoading ? '—' : (fund?.total_positions || 0)}</div>
             <p className="text-xs text-muted-foreground">
               Securities held
             </p>
@@ -124,7 +87,7 @@ export function FundDetail() {
             <CardTitle className="text-sm font-medium">Last Filing</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatDate(fund.lastFilingDate)}</div>
+            <div className="text-2xl font-bold">{fundLoading ? '—' : (fund?.last_filing_date ? formatDate(fund.last_filing_date) : '—')}</div>
             <p className="text-xs text-muted-foreground">
               Most recent 13F filing
             </p>
@@ -136,9 +99,9 @@ export function FundDetail() {
             <CardTitle className="text-sm font-medium">Top Holding</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold">AAPL</div>
+            <div className="text-lg font-bold">{holdingsLoading ? '—' : (holdings?.[0]?.security?.ticker || '—')}</div>
             <p className="text-xs text-muted-foreground">
-              {holdings[0].percentOfPortfolio}% of portfolio
+              {holdingsLoading || !holdings?.[0]?.percent_of_portfolio ? '—' : `${holdings?.[0]?.percent_of_portfolio}% of portfolio`}
             </p>
           </CardContent>
         </Card>
@@ -151,43 +114,43 @@ export function FundDetail() {
             <CardHeader>
               <CardTitle>Current Holdings</CardTitle>
               <CardDescription>
-                Latest reported positions as of {formatDate(fund.lastFilingDate)}
+                Latest reported positions as of {fundLoading ? '—' : (fund?.last_filing_date ? formatDate(fund.last_filing_date) : '—')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {holdings.map((holding) => (
+                {(holdingsLoading ? [] : (holdings || [])).map((holding: any) => (
                   <div key={holding.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                        <span className="font-semibold text-sm">{holding.security.ticker}</span>
+                        <span className="font-semibold text-sm">{holding.security?.ticker || '—'}</span>
                       </div>
                       <div>
-                        <p className="font-medium">{holding.security.companyName}</p>
-                        <p className="text-sm text-muted-foreground">{holding.security.sector}</p>
+                        <p className="font-medium">{holding.security?.company_name}</p>
+                        <p className="text-sm text-muted-foreground">{holding.security?.sector}</p>
                       </div>
                     </div>
 
                     <div className="text-right space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="font-semibold">{formatCurrency(holding.marketValue)}</span>
-                        <div className={`flex items-center text-xs ${
-                          holding.changeType === 'NEW' ? 'text-blue-600' :
-                          holding.changeType === 'INCREASED' ? 'text-green-600' :
-                          holding.changeType === 'DECREASED' ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                          {holding.changeType === 'NEW' && <Plus className="h-3 w-3" />}
-                          {holding.changeType === 'INCREASED' && <TrendingUp className="h-3 w-3" />}
-                          {holding.changeType === 'DECREASED' && <TrendingDown className="h-3 w-3" />}
-                          {holding.changeType === 'SOLD' && <Minus className="h-3 w-3" />}
+                        <span className="font-semibold">{formatCurrency((holding.market_value || 0) / 100)}</span>
+                        <div className={`flex items-center text-xs text-gray-600`}>
+                          {/* Change type not available from API yet; reserved icons */}
+                          <Minus className="h-3 w-3 opacity-0" />
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {formatNumber(holding.sharesHeld)} shares • {holding.percentOfPortfolio}%
+                        {formatNumber(Number(holding.shares_held || 0))} shares • {holding.percent_of_portfolio || 0}%
                       </p>
                     </div>
                   </div>
                 ))}
+                {holdingsError && (
+                  <div className="text-sm text-red-600">Failed to load holdings.</div>
+                )}
+                {holdingsLoading && (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -202,18 +165,24 @@ export function FundDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {filingHistory.map((filing, index) => (
-                  <div key={filing.date} className="flex items-center justify-between">
+                {(historyLoading ? [] : (filingHistory || [])).map((filing: any) => (
+                  <div key={`${filing.filing_date}-${filing.period_end_date}`} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{filing.period}</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(filing.date)}</p>
+                      <p className="font-medium">{filing.period_end_date}</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(filing.filing_date)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">{formatCurrency(filing.totalValue)}</p>
-                      <p className="text-sm text-muted-foreground">{filing.positions} positions</p>
+                      <p className="font-semibold">{formatCurrency((filing.total_value || 0) / 100)}</p>
+                      <p className="text-sm text-muted-foreground">{filing.total_positions || 0} positions</p>
                     </div>
                   </div>
                 ))}
+                {historyError && (
+                  <div className="text-sm text-red-600">Failed to load filing history.</div>
+                )}
+                {historyLoading && (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -226,15 +195,15 @@ export function FundDetail() {
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="text-muted-foreground">Address</p>
-                  <p>{fund.address}</p>
+                  <p>{fund?.address || '—'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Phone</p>
-                  <p>{fund.phone}</p>
+                  <p>{fund?.phone || '—'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">CIK Number</p>
-                  <p>{fund.cik}</p>
+                  <p>{fund?.cik || '—'}</p>
                 </div>
               </div>
             </CardContent>
