@@ -4,58 +4,18 @@ import { Search, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { useQuery } from '@tanstack/react-query';
+import { getFunds } from '@/lib/api';
+import { useDebouncedValue } from '@/lib/utils';
 
 export function Funds() {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(searchQuery, 350);
 
-  // Mock data for demonstration
-  const funds = [
-    {
-      id: 1,
-      name: 'Berkshire Hathaway Inc',
-      cik: '0001067983',
-      totalValue: 500000000000,
-      totalPositions: 45,
-      lastFilingDate: '2024-08-14',
-      quarterlyChange: 2.3,
-      topHolding: 'Apple Inc.'
-    },
-    {
-      id: 2,
-      name: 'BlackRock Inc.',
-      cik: '0001364742',
-      totalValue: 400000000000,
-      totalPositions: 234,
-      lastFilingDate: '2024-08-15',
-      quarterlyChange: 1.8,
-      topHolding: 'Microsoft Corporation'
-    },
-    {
-      id: 3,
-      name: 'Vanguard Group Inc',
-      cik: '0001104659',
-      totalValue: 350000000000,
-      totalPositions: 156,
-      lastFilingDate: '2024-08-13',
-      quarterlyChange: -0.5,
-      topHolding: 'Amazon.com Inc.'
-    },
-    {
-      id: 4,
-      name: 'State Street Corp',
-      cik: '0000093751',
-      totalValue: 280000000000,
-      totalPositions: 189,
-      lastFilingDate: '2024-08-12',
-      quarterlyChange: 3.1,
-      topHolding: 'Tesla Inc.'
-    }
-  ];
-
-  const filteredFunds = funds.filter(fund =>
-    fund.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    fund.cik.includes(searchQuery)
-  );
+  const { data: funds, isLoading, error } = useQuery({
+    queryKey: ['funds', debouncedQuery],
+    queryFn: () => getFunds(debouncedQuery || undefined, 30)
+  });
 
   return (
     <div className="space-y-6">
@@ -86,7 +46,7 @@ export function Funds() {
 
       {/* Funds Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredFunds.map((fund) => (
+        {(isLoading ? [] : (funds || [])).map((fund: any) => (
           <Card key={fund.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -102,14 +62,14 @@ export function Funds() {
                   <CardDescription>CIK: {fund.cik}</CardDescription>
                 </div>
                 <div className={`flex items-center space-x-1 text-sm ${
-                  fund.quarterlyChange >= 0 ? 'text-green-600' : 'text-red-600'
+                  (fund.quarterly_change || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {fund.quarterlyChange >= 0 ? (
+                  {(fund.quarterly_change || 0) >= 0 ? (
                     <TrendingUp className="h-4 w-4" />
                   ) : (
                     <TrendingDown className="h-4 w-4" />
                   )}
-                  <span>{fund.quarterlyChange >= 0 ? '+' : ''}{fund.quarterlyChange}%</span>
+                  <span>{(fund.quarterly_change || 0) >= 0 ? '+' : ''}{(fund.quarterly_change || 0).toFixed(1)}%</span>
                 </div>
               </div>
             </CardHeader>
@@ -117,19 +77,15 @@ export function Funds() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Total Value</span>
-                  <span className="font-semibold">{formatCurrency(fund.totalValue)}</span>
+                  <span className="font-semibold">{formatCurrency((fund.total_value || 0) / 100)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Positions</span>
-                  <span className="font-semibold">{fund.totalPositions}</span>
+                  <span className="font-semibold">{fund.total_positions || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Last Filing</span>
-                  <span className="font-semibold">{formatDate(fund.lastFilingDate)}</span>
-                </div>
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-muted-foreground">Top Holding:</p>
-                  <p className="font-medium">{fund.topHolding}</p>
+                  <span className="font-semibold">{fund.last_filing_date ? formatDate(fund.last_filing_date) : '—'}</span>
                 </div>
               </div>
             </CardContent>
@@ -137,9 +93,15 @@ export function Funds() {
         ))}
       </div>
 
-      {filteredFunds.length === 0 && (
+      {!isLoading && !error && (funds?.length || 0) === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No funds found matching your search.</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-12">
+          <p className="text-red-600">Failed to load funds.</p>
         </div>
       )}
     </div>
